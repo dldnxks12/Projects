@@ -1,0 +1,7 @@
+# sample image and saved model
+model.pth.tar
+BUSI2/Sample/test.png
+BUSI2/Sample/test_mask.png
+
+# dataset
+BUSI2
