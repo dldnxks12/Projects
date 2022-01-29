@@ -1,0 +1,84 @@
+
+# Flask 가 view rendering 할 때 해당 html file은 templates folder에 존재해야함
+
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>HOME NETWORK</title>
+        
+        <style>
+            body{
+                background-color: rgb(88, 157, 221);
+
+                }
+        .container{
+            width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .main{
+            display: flex;
+        }
+        .main div {
+            flex:1;
+        }
+        .main div button{
+            background-color: rgb(000, 144, 100);
+            width: 150px;
+            height: 80px;
+            border-radius: 10px;
+        }
+
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h2>HELLO HOME IoT</h2>
+            </div>
+        
+            <div class="main">
+                <div>
+                    <button onclick="led_on()">LED ON</button>
+                </div>
+                <div>
+                    <button onclick="led_off()">LED OFF</button>
+                </div>                    
+            </div>
+                <div id="result">
+            </div>
+        </div>
+        <script>
+            function led_on(){
+                fetch("/led/on")
+                .then(response=> response.text())
+                .then(data=>{
+                    console.log(data);
+                    let result = document.querySelector("#result");
+                    if(data=="ok"){
+                        result.innerHTML = "<h1>LED is running</h1>";
+                    }else{
+                        result.innerHTML = "<h1>error</h1>";
+                    }
+                });
+            }
+            function led_off(){
+                fetch("/led/off")
+                .then(response=> response.text())
+                .then(data=>{
+                    console.log(data);
+                    let result = document.querySelector("#result");
+                    if(data=="ok"){
+                        result.innerHTML = "<h1>LED is stopping</h1>";
+                    }else{
+                        result.innerHTML = "<h1>error</h1>";
+                    }
+                });
+            }
+        </script>
+
+    </body>
+</html>
+</DOCTYPE>
