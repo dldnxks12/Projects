@@ -1,5 +1,5 @@
 # 코드 동작 OK
-# 학습 XX
+# 학습 Ok
 
 import gym
 import sys
@@ -24,10 +24,10 @@ print(f"On {device}")
 print("")
 
 # Hyperparameters
-lr_mu = 0.005         # Learning Rate for Torque (Action)
+lr_mu = 0.0005         # Learning Rate for Torque (Action)
 lr_q = 0.001          # Learning Rate for Q
 gamma = 0.99         # discount factor
-batch_size = 64      # Mini Batch Size for Sampling from Replay Memory
+batch_size = 32      # Mini Batch Size for Sampling from Replay Memory
 buffer_limit = 50000 # Replay Memory Size
 tau = 0.005          # for target network soft update
 
@@ -76,7 +76,7 @@ class MuNet(nn.Module):  # Output : Deterministic Action !
     def forward(self, x): # Input : state (COS, SIN, 각속도)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        mu = torch.tanh(self.fc_mu(x))  # Multipled by 2 because the action space of the Pendulum-v0 is [-2,2]
+        mu = torch.tanh(self.fc_mu(x))
         return mu
 
 class QNet(nn.Module):
@@ -90,10 +90,7 @@ class QNet(nn.Module):
     def forward(self, x, a):
         h1 = F.relu(self.fc_s(x)) # 64
         h2 = F.relu(self.fc_a(a)) # 64
-
-        # cat = torch.cat([h1, h2], dim = -1) # 128
-        # cat = torch.cat([h1, h2], dim = 1) # 128
-        cat = torch.cat([h1, h2], dim = 0)  # 128
+        cat = torch.cat([h1, h2], dim = 1)  # 128
         q = F.relu(self.fc_q(cat))   # 128
         q = self.fc_out(q)  # 1 - Q Value
         return q
@@ -115,27 +112,18 @@ class OrnsteinUhlenbeckNoise:
 ###########################################################################
 # Train ...
 
-def train(mu, mu_target, q, q_taget, memory, mu_optimizer, q_optimizer):
+def train(mu, mu_target, q, q_target, memory, q_optimizer, mu_optimizer):
     states, actions, rewards, next_states, dones = memory.sample(batch_size)
     Critic, Actor = 0.0 , 0.0
-    for (state, action, reward, next_state, done) in zip(states, actions, rewards, next_states, dones):
-        if done == 0:
-            y = reward
-        else:
-            with torch.no_grad():
-                a = mu_target(next_state)
-                y = reward + gamma*(q_target(next_state, a))
 
-        Critic += (y - q(state, action))**2
-    Critic = -Critic/batch_size
+    y = rewards + ( gamma*(q_target(next_states, mu_target(next_states)))*dones )
+
+    Critic = torch.nn.functional.smooth_l1_loss( q(states, actions), y.detach() )
     q_optimizer.zero_grad()
     Critic.backward()
     q_optimizer.step()
 
-    for (state, action, reward, next_state, done) in zip(states, actions, rewards, next_states, dones):
-        Actor += q(state, mu(state))
-
-    Actor = -Actor/batch_size
+    Actor = -q(states, mu(states)).mean()
     mu_optimizer.zero_grad()
     Actor.backward()
     mu_optimizer.step()
