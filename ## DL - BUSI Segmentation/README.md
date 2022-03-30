@@ -1,5 +1,7 @@
 ## 프로젝트  
 
+[Paper link](https://www.mdpi.com/2076-3417/11/21/10216)
+
 BUSI(Breast Ultra-Sound Image) 데이터셋과 이미지 분할 모델을 이용하여 질병의 유무를 판단   
 
 - 사용 모델
